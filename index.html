@@ -2,166 +2,97 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SabanOS | שליחת הזמנה</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SabanOS - מרכז הזמנות וסידור</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --bg: #0f172a;
-            --card: #1e293b;
-            --accent: #10b981;
-            --text: #f8fafc;
-            --border: #334155;
-            --btn-hover: #059669;
-        }
-
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
-        body { 
-            font-family: 'Segoe UI', system-ui, sans-serif; 
-            background-color: var(--bg); 
-            color: var(--text); 
-            margin: 0; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh;
-        }
-
-        .app-card {
-            width: 90%;
-            max-width: 450px;
-            background: var(--card);
-            padding: 25px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            border: 1px solid var(--border);
-        }
-
-        h2 { 
-            margin: 0 0 20px 0; 
-            font-size: 24px; 
-            text-align: center; 
-            color: var(--accent);
-            letter-spacing: 1px;
-        }
-
-        .section-title {
-            font-size: 14px;
-            color: #94a3b8;
-            margin-bottom: 10px;
-            display: block;
-        }
-
-        .grid { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 12px; 
-            margin-bottom: 20px; 
-        }
-
-        .customer-btn { 
-            padding: 18px 10px; 
-            border: 1px solid var(--border); 
-            border-radius: 12px; 
-            background: #33415566; 
-            color: var(--text);
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer; 
-            transition: all 0.2s ease;
-        }
-
-        .customer-btn.active { 
-            background: var(--accent); 
-            border-color: var(--accent);
-            color: #064e3b;
-            transform: scale(0.98);
-        }
-
-        input { 
-            width: 100%; 
-            padding: 15px; 
-            margin-bottom: 15px; 
-            background: #0f172a;
-            border: 1px solid var(--border); 
-            border-radius: 12px; 
-            color: white;
-            font-size: 16px;
-            outline: none;
-        }
-
-        input:focus { border-color: var(--accent); }
-
-        .send-btn { 
-            width: 100%; 
-            padding: 18px; 
-            background: var(--accent); 
-            color: #064e3b; 
-            border: none; 
-            border-radius: 12px; 
-            font-size: 18px; 
-            font-weight: 800; 
-            cursor: pointer; 
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-            transition: transform 0.1s;
-        }
-
-        .send-btn:active { transform: scale(0.96); }
-
-        .footer {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 12px;
-            color: #64748b;
-        }
+        :root { --primary: #25D366; --secondary: #128C7E; --bg: #f0f2f5; --dark: #333; }
+        body { font-family: 'Segoe UI', system-ui; background: var(--bg); margin: 0; padding: 15px; color: var(--dark); }
+        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h2 { margin-top: 0; color: var(--secondary); border-bottom: 2px solid var(--bg); padding-bottom: 10px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        button { padding: 12px; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-select { background: white; }
+        .btn-select.active { background: var(--primary); color: white; border-color: var(--primary); }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        .btn-action { width: 100%; padding: 15px; background: var(--secondary); color: white; border: none; font-size: 18px; margin-top: 10px; }
+        .btn-morning { background: #3498db; } /* צבע שונה לדוח בוקר */
+        .history-tag { font-size: 12px; color: #777; margin-top: 5px; text-align: center; }
     </style>
 </head>
 <body>
 
-<div class="app-card">
-    <h2>SabanOS Dispatch</h2>
-    
-    <span class="section-title">בחר לקוח:</span>
+<div class="card">
+    <h2>🚀 יצירת הזמנה חדשה</h2>
     <div class="grid" id="customerGrid">
-        <button class="customer-btn" onclick="select('זבולון-עדירן', this)">זבולון-עדירן</button>
-        <button class="customer-btn" onclick="select('ד.ניב', this)">ד.ניב</button>
-        <button class="customer-btn" onclick="select('קבוצת הזמנות', this)">קבוצת הזמנות</button>
-        <button class="customer-btn" onclick="select('אחר', this)">לקוח אחר</button>
+        <button class="btn-select" onclick="setCustomer('זבולון-עדירן', this)">זבולון-עדירן</button>
+        <button class="btn-select" onclick="setCustomer('ד.ניב', this)">ד.ניב</button>
+        <button class="btn-select" onclick="setCustomer('קבוצת הזמנות', this)">קבוצת הזמנות</button>
+        <button class="btn-select" onclick="setCustomer('אוניל מהלה', this)">אוניל מהלה</button>
     </div>
+    <input type="text" id="orderNum" placeholder="מספר הזמנה (למשל: 62100614)">
+    <select id="deliveryType">
+        <option value="מנוף🏗️חכמת">🏗️ מנוף - חכמת</option>
+        <option value="משאית🚛עלי">🚛 משאית - עלי</option>
+    </select>
+    <button class="btn-action" onclick="handleOrder()">שגר לערוץ + שמירה ⚡</button>
+</div>
 
-    <input type="text" id="customCustomer" placeholder="שם הלקוח..." style="display:none;">
-    <input type="number" id="orderNum" placeholder="מספר הזמנה" inputmode="numeric">
-
-    <button class="send-btn" onclick="share()">שגר לערוץ 🚀</button>
-    
-    <div class="footer">מערכת ניהול סידור עבודה חכמה</div>
+<div class="card">
+    <h2>☀️ דוח בוקר מהיר</h2>
+    <button class="btn-action btn-morning" onclick="sendMorningReport()">שגר דוח בוקר לצוות 📅</button>
+    <p class="history-tag">סניף החרש (חכמת) | סניף התלמיד (עלי)</p>
 </div>
 
 <script>
-    let selected = "";
+    // הגדרות Supabase - תחליף ב-URL וה-Key שלך
+    const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+    const SUPABASE_KEY = 'YOUR_SUPABASE_KEY';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    function select(name, btn) {
-        selected = name;
-        document.querySelectorAll('.customer-btn').forEach(b => b.classList.remove('active'));
+    let selectedCustomer = "";
+
+    function setCustomer(name, btn) {
+        selectedCustomer = name;
+        document.querySelectorAll('.btn-select').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        document.getElementById('customCustomer').style.display = (name === 'אחר') ? 'block' : 'none';
     }
 
-    function share() {
-        const finalCustomer = selected === 'אחר' ? document.getElementById('customCustomer').value : selected;
-        const orderId = document.getElementById('orderNum').value || "חדשה";
+    // פונקציה לשמירה ב-Supabase
+    async function saveToDB(customer, orderId, type) {
+        const { data, error } = await supabase
+            .from('orders_history') // וודא שיש לך טבלה כזו
+            .insert([{ customer_name: customer, order_id: orderId, delivery_type: type, created_at: new Date() }]);
+        if (error) console.error('Error saving to DB:', error);
+    }
+
+    function handleOrder() {
+        const orderId = document.getElementById('orderNum').value;
+        const type = document.getElementById('deliveryType').value;
+
+        if (!selectedCustomer || !orderId) {
+            alert("אחי, תשלים שם לקוח ומספר הזמנה!");
+            return;
+        }
+
+        // שמירה להיסטוריה ב-Supabase
+        saveToDB(selectedCustomer, orderId, type);
+
+        // יצירת תבנית ההודעה
+        const msg = `*📦 הזמנה חדשה במערכת*\n---------------------------\n👤 *לקוח:* ${selectedCustomer}\n🆔 *מספר:* ${orderId}\n🚚 *הובלה:* ${type}\n⏳ *סטטוס:* בטיפול (טרם סופק)\n---------------------------\n_נשלח מלוח הבקרה SabanOS_`;
         
-        if (!finalCustomer) return alert("אחי, בחר לקוח!");
+        shareToWhatsApp(msg);
+    }
 
-        const msg = `*📦 הזמנה חדשה - סידור עבודה*\n` +
-                    `---------------------------\n` +
-                    `👤 *לקוח:* ${finalCustomer}\n` +
-                    `🆔 *מספר:* #${orderId}\n` +
-                    `⏳ *סטטוס:* ממתין לביצוע\n` +
-                    `---------------------------\n` +
-                    `_נשלח דרך SabanOS_`;
+    function sendMorningReport() {
+        const msg = `☀️ *דוח בוקר - סידור הובלות*\n---------------------------\n🏗️ *חכמת (מנוף):*\n📍 סניף החרש: העמסה 06:30 | התחייבות 07:00.\n\n🚛 *עלי (משאית):*\n📍 סניף התלמיד: העמסה 06:30 | יציאה 07:00.\n⬅️ קו: זבולון (כ"ס) | אוניל (רעננה) | ד.ניב (רמה"ש).\n---------------------------\n📅 *תאריך:* ${new Date().toLocaleDateString('he-IL')}\n_נא לאשר קבלת סידור_ ✅`;
+        
+        shareToWhatsApp(msg);
+    }
 
-        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    function shareToWhatsApp(text) {
+        const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+        window.open(url, '_blank');
     }
 </script>
 
